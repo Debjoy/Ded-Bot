@@ -1,0 +1,22 @@
+{
+  "name": "ded-bot",
+  "version": "1.0.0",
+  "description": "private bot",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./main.js",
+    "dev": "nodemon ./main.js"
+  },
+  "author": "debjoy bhowal",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/opus": "^0.6.0",
+    "better-sqlite3": "^7.4.3",
+    "discord.js-12": "^1.0.2",
+    "dotenv": "^10.0.0",
+    "ffmpeg-static": "^4.4.0",
+    "yt-search": "^2.10.1",
+    "ytdl-core": "^4.9.1"
+  }
+}
