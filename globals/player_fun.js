@@ -3,10 +3,12 @@ const constants = require("../globals/constants");
 const Database = require("better-sqlite3");
 const db = new Database("dedbot.db", { verbose: console.log });
 
-const play = async (message, song) => {
-  const serverQueue = playerQueue.get(message.guild.id);
+const play = async (message, interaction, song) => {
+  const serverQueue = playerQueue.get(
+    message ? message.guild.id : interaction.guild_id
+  );
   if (!song) {
-    stop(message);
+    stop(message, interaction);
     return;
   }
   let filters = {};
@@ -15,7 +17,7 @@ const play = async (message, song) => {
     .play(ytdl(song.url, filters))
     .on("finish", () => {
       serverQueue.songs.shift();
-      play(message, serverQueue.songs[0]);
+      play(message, interaction, serverQueue.songs[0]);
     })
     .on("error", (error) => console.error(error));
   dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
@@ -33,7 +35,7 @@ const play = async (message, song) => {
         text: `Use ${constants.PREFIX}player to bring the player again`,
       },
     };
-    serverQueue.player_message.edit({ content: "", embed: player_embed });
+    serverQueue.player_message.edit({ content: null, embed: player_embed });
     await serverQueue.player_message.react(constants.EMOJI_STOP);
     serverQueue.player_message.react(constants.EMOJI_PAUSE);
     serverQueue.player_loaded = true;
@@ -119,8 +121,10 @@ const resume = (message, isReaction = false) => {
   else console.log("Already playing");
 };
 
-const stop = async (message) => {
-  const serverQueue = playerQueue.get(message.guild.id);
+const stop = async (message, interaction) => {
+  const serverQueue = playerQueue.get(
+    message ? message.guild.id : interaction.guild_id
+  );
 
   await serverQueue.voiceChannel.leave();
   serverQueue.player_message.edit(`Player closed 👍. Have a nice day!`);
@@ -133,8 +137,10 @@ const stop = async (message) => {
   playerQueue.delete(message.guild.id);
 };
 
-const skip = (message) => {
-  const serverQueue = playerQueue.get(message.guild.id);
+const skip = (message, interaction) => {
+  const serverQueue = playerQueue.get(
+    message ? message.guild.id : interaction.guild_id
+  );
   if (!serverQueue) return;
   serverQueue.connection.dispatcher.end();
 };

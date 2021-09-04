@@ -23,6 +23,6 @@ module.exports = {
     if (!permissions.has("SPEAK"))
       return message.channel.send("You dont have the correct permissins");
     message.react("👋");
-    player_func.stop(message)
+    player_func.stop(message, null)
   },
 };

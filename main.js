@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Client, Intents, Collection } = require("discord.js-12");
+const { Client, Intents, Collection, WebhookClient } = require("discord.js-12");
 const Database = require("better-sqlite3");
 const db = new Database("dedbot.db", { verbose: console.log });
 
@@ -12,12 +12,14 @@ const client = new Client({
     Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
   ],
   partials: ["MESSAGE", "CHANNEL", "REACTION"],
+  fetchAllMembers: true,
 });
 
 const fs = require("fs");
 require("./globals/player_data");
 const constants = require("./globals/constants");
 const player_func = require("./globals/player_fun");
+const utility = require("./globals/utilities");
 const prefix = constants.PREFIX;
 
 client.commands = new Collection();
@@ -33,6 +35,8 @@ for (const file of commandFiles) {
 
 client.once("ready", () => {
   console.log("Ded-Bot is online!");
+
+  utility.createCommands(client);
   let players = db.prepare("Select * from running_players").all();
   console.log(players);
 
@@ -56,6 +60,16 @@ client.once("ready", () => {
   });
 });
 
+client.ws.on("INTERACTION_CREATE", async (interaction) => {
+  // do stuff and respond here
+  console.log(interaction);
+  const command = interaction.data.name.toLowerCase();
+
+  if (command === "play") {
+    client.commands.get("play").execute(client, interaction.data.options, null, interaction);
+  }
+});
+
 client.on("message", (message) => {
   readMessage(message);
 });
@@ -71,7 +85,7 @@ const readMessage = (message) => {
   }
 
   if (command === "play" || command === "p") {
-    client.commands.get("play").execute(message, args);
+    client.commands.get("play").execute(client, args, message, null);
   }
 
   if (command === "leave" || command === "dc" || command === "stop") {
@@ -94,7 +108,7 @@ const readMessage = (message) => {
 client.on("messageReactionAdd", async (reaction, user) => {
   const serverQueue = playerQueue.get(reaction.message.guild.id);
 
-  if(reaction._emoji.name == constants.EMOJI_RERUN){
+  if (reaction._emoji.name == constants.EMOJI_RERUN) {
     const channel = client.channels.cache.get(reaction.message.channel.id);
     if (channel) {
       channel.messages
@@ -109,7 +123,12 @@ client.on("messageReactionAdd", async (reaction, user) => {
 
   const member = reaction.message.guild.members.cache.get(user.id);
   const voiceChannel = member.voice.channel;
-  if (!voiceChannel || !serverQueue || serverQueue.voiceChannel.id != voiceChannel.id) return;
+  if (
+    !voiceChannel ||
+    !serverQueue ||
+    serverQueue.voiceChannel.id != voiceChannel.id
+  )
+    return;
   if (!user.bot && reaction.message.id == serverQueue.player_message.id)
     switch (reaction._emoji.name) {
       case constants.EMOJI_RESUME:

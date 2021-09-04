@@ -1,6 +1,7 @@
 const ytdl = require("ytdl-core");
 const ytSearch = require("yt-search");
 const constants = require("../globals/constants");
+const utility = require("../globals/utilities");
 const player_func = require("../globals/player_fun");
 const Database = require("better-sqlite3");
 const db = new Database("dedbot.db", { verbose: console.log });
@@ -8,17 +9,35 @@ const db = new Database("dedbot.db", { verbose: console.log });
 module.exports = {
   name: "play",
   description: "Joins and plays a video from youtube",
-  async execute(message, args) {
-    const voiceChannel = message.member.voice.channel;
+  async execute(client, args, message, interaction) {
+    const voiceChannel = utility.getVoiceChannel(client, message, interaction);
     if (!voiceChannel)
-      return message.channel.send(
-        "You need to be in a channel to execute this command!"
+      return utility.send_reply(
+        "You need to be in a channel to execute this command!",
+        client,
+        message,
+        interaction,
+        true
       );
-    const permissions = voiceChannel.permissionsFor(message.client.user);
+    const permissions = voiceChannel.permissionsFor(
+      utility.getUser(client, message, interaction)
+    );
     if (!permissions.has("CONNECT"))
-      return message.channel.send("You dont have the correct permissins");
+      return utility.send_reply(
+        "You dont have the correct permissins",
+        client,
+        message,
+        interaction,
+        true
+      );
     if (!permissions.has("SPEAK"))
-      return message.channel.send("You dont have the correct permissins");
+      return utility.send_reply(
+        "You dont have the correct permissions",
+        client,
+        message,
+        interaction,
+        true
+      );
     if (!args.length)
       return message.channel.send("You need to send the second argument!");
 
@@ -32,25 +51,35 @@ module.exports = {
       }
     };
 
-    const serverQueue = playerQueue.get(message.guild.id);
+    const serverQueue = playerQueue.get(
+      message ? message.guild.id : interaction.guild_id
+    );
     let player_message_init;
-    
-    if(!serverQueue){
-      player_message_init = await message.channel.send(`Getting info ... ${constants.EMOJI_LOADING}`) ; 
-      db.prepare("insert into running_players (player_msg_id, channel_id) values ($msg_id, $chnl_id)").run({
-        chnl_id: message.channel.id,
-        msg_id: player_message_init.id
-      })
+
+    if (!serverQueue) {
+      if (interaction)
+        utility.send_reply("Player 👇", client, message, interaction, true);
+      player_message_init = await utility
+        .getTextChannel(client, message, interaction)
+        .send(`Getting info ... ${constants.EMOJI_LOADING}`);
+      db.prepare(
+        "insert into running_players (player_msg_id, channel_id) values ($msg_id, $chnl_id)"
+      ).run({
+        chnl_id: utility.getTextChannel(client, message, interaction).id,
+        msg_id: player_message_init.id,
+      });
     }
 
     const connection = await voiceChannel.join();
-
+    connection.voice.setDeaf(true);
     const song = {};
 
-    if (validURL(args[0])) {
+    const input = typeof args[0] == "object" ? args[0].value : args[0];
+
+    if (validURL(input)) {
       //WHEN URL IS USED
       //TO be tested
-      const songInfo = await ytdl.getInfo(args[0]);
+      const songInfo = await ytdl.getInfo(input);
       song.title = songInfo.videoDetails.title;
       song.url = songInfo.videoDetails.video_url;
       let thumbnails = songInfo.videoDetails.thumbnails;
@@ -62,16 +91,15 @@ module.exports = {
         return videoResult.videos.length > 1 ? videoResult.videos[0] : null;
       };
 
-      const video = await videoFinder(args.join(" "));
+      const video = await videoFinder(input);
       song.title = video.title;
       song.url = video.url;
       song.thumb = video.thumbnail;
     }
-    
+
     if (!serverQueue) {
-    
       const queueContruct = {
-        textChannel: message.channel,
+        textChannel: utility.getTextChannel(client, message, interaction),
         voiceChannel: voiceChannel,
         connection: connection,
         player_message: player_message_init,
@@ -82,17 +110,22 @@ module.exports = {
         playing: true,
       };
 
-      playerQueue.set(message.guild.id, queueContruct);
+      playerQueue.set(
+        message ? message.guild.id : interaction.guild_id,
+        queueContruct
+      );
 
       queueContruct.songs.push(song); //ADDING to QUEUE
-      
-      message.react(constants.EMOJI_RERUN);
-      player_func.play(message, queueContruct.songs[0]);
+
+      if (message) message.react(constants.EMOJI_RERUN);
+      player_func.play(message, interaction, queueContruct.songs[0]);
     } else {
       serverQueue.songs.push(song);
-      player_func.skip(message);
-      message.react("👍");
-      message.react(constants.EMOJI_RERUN);
+      player_func.skip(message, interaction);
+      if (message) {
+        message.react("👍");
+        message.react(constants.EMOJI_RERUN);
+      }
       return; //To be thought later
       serverQueue.songs.push(song);
       message.channel.send(`${song.title} has been added to the queue!`);
