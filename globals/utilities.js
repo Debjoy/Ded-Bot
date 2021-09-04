@@ -29,7 +29,6 @@ const createCommands = (client) => {
 /* FETCHING COMMANDS*/
 
 const fetchCommands = async (client) => {
-  console.log(getReference(client));
   try {
     let commands = await getReference(client).commands.get();
     console.log(commands);

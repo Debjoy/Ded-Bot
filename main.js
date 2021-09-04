@@ -62,7 +62,6 @@ client.once("ready", () => {
 
 client.ws.on("INTERACTION_CREATE", async (interaction) => {
   // do stuff and respond here
-  console.log(interaction);
   const command = interaction.data.name.toLowerCase();
 
   if (command === "play") {

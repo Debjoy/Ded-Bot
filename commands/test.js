@@ -1,3 +1,4 @@
+const player_func = require("../globals/player_fun");
 module.exports = {
     name: 'test',
     description: "this is a ping command!",

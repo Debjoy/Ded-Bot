@@ -23,36 +23,8 @@ const play = async (message, interaction, song) => {
   dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
   serverQueue.dispatcher = dispatcher;
 
-  if (!serverQueue.player_loaded) {
-    const player_embed = {
-      title: `Player: Running ▶`,
-      color: constants.COLOR_SUCCESS,
-      description: `:thumbsup: Now Playing ***${song.title}***`,
-      thumbnail: {
-        url: song.thumb,
-      },
-      footer: {
-        text: `Use ${constants.PREFIX}player to bring the player again`,
-      },
-    };
-    serverQueue.player_message.edit({ content: null, embed: player_embed });
-    await serverQueue.player_message.react(constants.EMOJI_STOP);
-    serverQueue.player_message.react(constants.EMOJI_PAUSE);
-    serverQueue.player_loaded = true;
-  } else {
-    const player_embed = {
-      title: `Player: Playing ▶`,
-      color: constants.COLOR_SUCCESS,
-      description: `:thumbsup: Now Playing ***${song.title}***`,
-      thumbnail: {
-        url: song.thumb,
-      },
-      footer: {
-        text: `Use ${constants.PREFIX}player to bring the player again`,
-      },
-    };
-    serverQueue.player_message.edit({ embed: player_embed });
-  }
+  updatePlayer(serverQueue);
+  serverQueue.player_loaded = true;
 };
 
 const pause = (message, isReaction = false) => {
@@ -64,23 +36,7 @@ const pause = (message, isReaction = false) => {
       if (!isReaction) message.react("👍");
       serverQueue.playing = false;
       const song = serverQueue.songs[0];
-      const player_embed = {
-        title: `Player: Paused ⏸`,
-        color: constants.COLOR_INFO,
-        description: `:thumbsup: Now Paused ***${song.title}***`,
-        thumbnail: {
-          url: song.thumb,
-        },
-        footer: {
-          text: `Use ${constants.PREFIX}player to bring the player again`,
-        },
-      };
-      serverQueue.player_message.edit({ embed: player_embed });
-      serverQueue.player_message.reactions.cache
-        .get(constants.EMOJI_PAUSE)
-        ?.remove()
-        .catch((error) => console.error("Failed to remove reactions:", error));
-      serverQueue.player_message.react(constants.EMOJI_RESUME);
+      updatePlayer(serverQueue);
     } else {
       message.react("⚠");
     }
@@ -94,26 +50,11 @@ const resume = (message, isReaction = false) => {
   if (!serverQueue.playing) {
     if (serverQueue.dispatcher) {
       serverQueue.dispatcher.resume();
+
       if (!isReaction) message.react("👍");
       serverQueue.playing = true;
-      const song = serverQueue.songs[0];
-      const player_embed = {
-        title: `Player: Playing ▶`,
-        color: constants.COLOR_SUCCESS,
-        description: `:thumbsup: Now Playing ***${song.title}***`,
-        thumbnail: {
-          url: song.thumb,
-        },
-        footer: {
-          text: `Use ${constants.PREFIX}player to bring the player again`,
-        },
-      };
-      serverQueue.player_message.edit({ embed: player_embed });
-      serverQueue.player_message.reactions.cache
-        .get(constants.EMOJI_RESUME)
-        ?.remove()
-        .catch((error) => console.error("Failed to remove reactions:", error));
-      serverQueue.player_message.react(constants.EMOJI_PAUSE);
+
+      updatePlayer(serverQueue);
     } else {
       message.react("⚠");
     }
@@ -144,10 +85,53 @@ const skip = (message, interaction) => {
   if (!serverQueue) return;
   serverQueue.connection.dispatcher.end();
 };
+
+const updatePlayer = (serverQueue) => {
+  const msg = serverQueue.player_message;
+
+  const reactionCollection = msg.reactions.cache;
+
+  if (!reactionCollection.has(constants.EMOJI_STOP))
+    msg.react(constants.EMOJI_STOP);
+
+  if (serverQueue.playing) {
+    if (reactionCollection.has(constants.EMOJI_RESUME))
+      serverQueue.player_message.reactions.cache
+        .get(constants.EMOJI_RESUME)
+        ?.remove()
+        .catch((error) => console.error("Failed to remove reactions:", error));
+    if (!reactionCollection.has(constants.EMOJI_PAUSE))
+      msg.react(constants.EMOJI_PAUSE);
+  } else {
+    if (reactionCollection.has(constants.EMOJI_PAUSE))
+      serverQueue.player_message.reactions.cache
+        .get(constants.EMOJI_PAUSE)
+        ?.remove()
+        .catch((error) => console.error("Failed to remove reactions:", error));
+    if (!reactionCollection.has(constants.EMOJI_RESUME))
+      msg.react(constants.EMOJI_RESUME);
+  }
+  if (serverQueue.songs.length == 0) return console.log("Queue empty");
+
+  let song = serverQueue.songs[0];
+  const player_embed = {
+    title: `Player: ${serverQueue.playing ? "Playing ▶" : "Player: Paused ⏸"}`,
+    color: serverQueue.playing ? constants.COLOR_SUCCESS : constants.COLOR_INFO,
+    description: `:thumbsup: Now Playing ***${song.title}***`,
+    thumbnail: {
+      url: song.thumb,
+    },
+    footer: {
+      text: `Use ${constants.PREFIX}player to bring the player again`,
+    },
+  };
+  serverQueue.player_message.edit({content: null, embed: player_embed });
+};
 module.exports = {
   play,
   pause,
   resume,
   stop,
   skip,
+  updatePlayer,
 };
