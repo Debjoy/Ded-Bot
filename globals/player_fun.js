@@ -102,7 +102,7 @@ const updatePlayer = (serverQueue) => {
       if (index > 0) queueString += (index+1)+`: ${song.title}\n`;
     });
   }else{
-    queueString = "Empty! will close player when skippe";
+    queueString = "Empty! will close "+constants.EMOJI_STOP+" player when skipped "+constants.EMOJI_SKIP;
   }
   const player_embed = {
     title: `Player: ${serverQueue.playing ? "Playing ▶" : "Player: Paused ⏸"}`,
