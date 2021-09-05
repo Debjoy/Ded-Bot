@@ -9,7 +9,7 @@ module.exports = {
     const serverQueue = playerQueue.get(message.guild.id);
     if(!serverQueue){
         return message.channel.send(
-            "Nothingss playing 😶 !"
+            "Nothing's playing 😶 !"
           );
     }
     if (!voiceChannel || serverQueue.voiceChannel.id != voiceChannel.id)
@@ -19,9 +19,9 @@ module.exports = {
 
     const permissions = voiceChannel.permissionsFor(message.client.user);
     if (!permissions.has("CONNECT"))
-      return message.channel.send("You dont have the correct permissins");
+      return message.channel.send("You dont have the correct permissions");
     if (!permissions.has("SPEAK"))
-      return message.channel.send("You dont have the correct permissins");
+      return message.channel.send("You dont have the correct permissions");
     message.react("👋");
     player_func.stop(message, null)
   },

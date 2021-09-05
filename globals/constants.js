@@ -9,7 +9,8 @@ module.exports = {
 
   EMOJI_RESUME: "▶",
   EMOJI_PAUSE: "⏸",
-  EMOJI_STOP: "❌",
+  EMOJI_STOP: "🟥",
+  EMOJI_SKIP: "⏭",
   EMOJI_RERUN: "⏯️",
   EMOJI_LOADING:"<a:loading:882834955292540958>" // custom animated emoji for loading animation
 };

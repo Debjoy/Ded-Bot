@@ -30,6 +30,12 @@ const createCommands = (client) => {
       description: "Need help? 🖐"
     },
   });
+  getReference(client).commands.post({
+    data: {
+      name: "skip",
+      description: "Skip the current song! ⏭"
+    },
+  });
 };
 
 /* FETCHING COMMANDS*/

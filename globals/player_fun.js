@@ -1,5 +1,6 @@
 const ytdl = require("ytdl-core");
 const constants = require("../globals/constants");
+const utility = require("../globals/utilities");
 const Database = require("better-sqlite3");
 const db = new Database("dedbot.db", { verbose: console.log });
 
@@ -88,32 +89,21 @@ const skip = (message, interaction) => {
 
 const updatePlayer = (serverQueue) => {
   const msg = serverQueue.player_message;
-
-  const reactionCollection = msg.reactions.cache;
-
-  if (!reactionCollection.has(constants.EMOJI_STOP))
-    msg.react(constants.EMOJI_STOP);
-
-  if (serverQueue.playing) {
-    if (reactionCollection.has(constants.EMOJI_RESUME))
-      serverQueue.player_message.reactions.cache
-        .get(constants.EMOJI_RESUME)
-        ?.remove()
-        .catch((error) => console.error("Failed to remove reactions:", error));
-    if (!reactionCollection.has(constants.EMOJI_PAUSE))
-      msg.react(constants.EMOJI_PAUSE);
-  } else {
-    if (reactionCollection.has(constants.EMOJI_PAUSE))
-      serverQueue.player_message.reactions.cache
-        .get(constants.EMOJI_PAUSE)
-        ?.remove()
-        .catch((error) => console.error("Failed to remove reactions:", error));
-    if (!reactionCollection.has(constants.EMOJI_RESUME))
-      msg.react(constants.EMOJI_RESUME);
-  }
+  msg.react(constants.EMOJI_RESUME);
+  msg.react(constants.EMOJI_PAUSE);
+  msg.react(constants.EMOJI_SKIP);
+  msg.react(constants.EMOJI_STOP);
   if (serverQueue.songs.length == 0) return console.log("Queue empty");
 
   let song = serverQueue.songs[0];
+  let queueString = "";
+  if (serverQueue.songs.length > 1) {
+    serverQueue.songs.forEach((song, index) => {
+      if (index > 0) queueString += (index+1)+`: ${song.title}\n`;
+    });
+  }else{
+    queueString = "Empty! will close player when skippe";
+  }
   const player_embed = {
     title: `Player: ${serverQueue.playing ? "Playing ▶" : "Player: Paused ⏸"}`,
     color: serverQueue.playing ? constants.COLOR_SUCCESS : constants.COLOR_INFO,
@@ -121,11 +111,17 @@ const updatePlayer = (serverQueue) => {
     thumbnail: {
       url: song.thumb,
     },
+    fields: [
+      {
+        name:"Queue 📃",
+        value:queueString
+      }
+    ],
     footer: {
       text: `Use ${constants.PREFIX}player to bring the player again`,
     },
   };
-  serverQueue.player_message.edit({content: null, embed: player_embed });
+  serverQueue.player_message.edit({ content: null, embed: player_embed });
 };
 module.exports = {
   play,

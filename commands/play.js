@@ -74,8 +74,8 @@ module.exports = {
     connection.voice.setDeaf(true);
     const song = {};
 
-    const input = typeof args[0] == "object" ? args[0].value : args[0];
-
+    const input = typeof args[0] == "object" ? args[0].value : args.join(" ");
+    console.log(input);
     if (validURL(input)) {
       //WHEN URL IS USED
       //TO be tested
@@ -119,19 +119,15 @@ module.exports = {
 
       if (message) message.react(constants.EMOJI_RERUN);
       player_func.play(message, interaction, queueContruct.songs[0]);
-    } else {
-      let firstSong = serverQueue.songs.shift();
-      serverQueue.songs.unshift(firstSong, song);
-      player_func.skip(message, interaction);
+    } else {      
+      serverQueue.songs.push(song);
       if (message) {
         message.react("👍");
-        message.react(constants.EMOJI_RERUN);
+        utility.send_reply(`**${song.title}** has been added to the queue!`,client, message, null);
       } else {
-        utility.send_reply("Ok 👍",client, null, interaction);
+        utility.send_reply(`**${song.title}** has been added to the queue!`,client, null, interaction);
       }
-      return; //To be thought later
-      serverQueue.songs.push(song);
-      message.channel.send(`${song.title} has been added to the queue!`);
+      player_func.updatePlayer(serverQueue);
     }
   },
 };

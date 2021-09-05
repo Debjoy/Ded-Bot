@@ -29,6 +29,10 @@ module.exports = {
                     **Alias**: \`${prefix}dc\` , \`${prefix}leave\` , \`${prefix}disconnect\``,
         },
         {
+          name: `${prefix}skip or /skip`,
+          value: `Skips currently playing song.`,
+        },
+        {
           name: `${prefix}player`,
           value: `Re-Renders the player for easy access.`,
         },

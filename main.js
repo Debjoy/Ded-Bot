@@ -65,9 +65,17 @@ client.ws.on("INTERACTION_CREATE", async (interaction) => {
   const command = interaction.data.name.toLowerCase();
 
   if (command === "play") {
-    client.commands.get("play").execute(client, interaction.data.options, null, interaction);
-  } else if (command == "help") {    
-    client.commands.get("help").execute(client, interaction.data.options, null, interaction);
+    client.commands
+      .get("play")
+      .execute(client, interaction.data.options, null, interaction);
+  } else if (command == "help") {
+    client.commands
+      .get("help")
+      .execute(client, interaction.data.options, null, interaction);
+  } else if (command == "skip") {
+    client.commands
+      .get("skip")
+      .execute(client, interaction.data.options, null, interaction);
   }
 });
 
@@ -83,41 +91,60 @@ const readMessage = (message) => {
 
   if (command === "test") {
     client.commands.get("test").execute(message, args);
+    return;
   }
 
   if (command === "play" || command === "p") {
     client.commands.get("play").execute(client, args, message, null);
+    return;
   }
 
   if (command === "leave" || command === "dc" || command === "stop") {
     client.commands.get("leave").execute(message, args);
+    return;
   }
 
   if (command === "pause") {
     client.commands.get("pause").execute(message, args);
+    return;
   }
 
   if (command === "resume") {
     client.commands.get("resume").execute(message, args);
+    return;
   }
 
   if (command === "player") {
     client.commands.get("player").execute(message, args);
+    return;
+  }
+
+  if (command === "skip") {
+    client.commands.get("skip").execute(client, args, message, null);
+    return;
   }
 
   if (command === "queue" || command === "q") {
-
+    return;
   }
 
-  if (command === "help") {    
+  if (command === "help") {
     client.commands.get("help").execute(client, args, message, null);
+    return;
   }
 };
 
-client.on("messageReactionAdd", async (reaction, user) => {
+client.on("messageReactionAdd", (reaction, user) => {
+  messageReaction(reaction, user);
+});
+client.on("messageReactionRemove", (reaction, user) => {
+  messageReaction(reaction, user);
+});
+
+const messageReaction = async (reaction, user) => {
   const serverQueue = playerQueue.get(reaction.message.guild.id);
 
-  if (reaction._emoji.name == constants.EMOJI_RERUN) {
+  if (!user.bot && reaction._emoji.name == constants.EMOJI_RERUN) {
     const channel = client.channels.cache.get(reaction.message.channel.id);
     if (channel) {
       channel.messages
@@ -149,6 +176,9 @@ client.on("messageReactionAdd", async (reaction, user) => {
       case constants.EMOJI_STOP:
         player_func.stop(reaction.message);
         break;
+      case constants.EMOJI_SKIP:
+        player_func.skip(reaction.message, null);
+        break;
     }
-});
+};
 client.login(process.env.BOT_TOKEN);
