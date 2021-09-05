@@ -61,7 +61,7 @@ module.exports = {
         utility.send_reply("Player 👇", client, message, interaction, true);
       player_message_init = await utility
         .getTextChannel(client, message, interaction)
-        .send(`Getting info ... ${constants.EMOJI_LOADING}`);
+        .send(`Searching 🔍 ${constants.EMOJI_LOADING}`);
       db.prepare(
         "insert into running_players (player_msg_id, channel_id) values ($msg_id, $chnl_id)"
       ).run({
@@ -120,11 +120,14 @@ module.exports = {
       if (message) message.react(constants.EMOJI_RERUN);
       player_func.play(message, interaction, queueContruct.songs[0]);
     } else {
-      serverQueue.songs.push(song);
+      let firstSong = serverQueue.songs.shift();
+      serverQueue.songs.unshift(firstSong, song);
       player_func.skip(message, interaction);
       if (message) {
         message.react("👍");
         message.react(constants.EMOJI_RERUN);
+      } else {
+        utility.send_reply("Ok 👍",client, null, interaction);
       }
       return; //To be thought later
       serverQueue.songs.push(song);

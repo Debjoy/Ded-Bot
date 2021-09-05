@@ -16,8 +16,8 @@ const createCommands = (client) => {
       description: "play a song!",
       options: [
         {
-          name: "input",
-          description: "url or keywords",
+          name: "song",
+          description: "Enter URL or Search",
           type: 3,
           required: true,
         },
