@@ -66,6 +66,8 @@ client.ws.on("INTERACTION_CREATE", async (interaction) => {
 
   if (command === "play") {
     client.commands.get("play").execute(client, interaction.data.options, null, interaction);
+  } else if (command == "help") {    
+    client.commands.get("help").execute(client, interaction.data.options, null, interaction);
   }
 });
 
@@ -101,6 +103,14 @@ const readMessage = (message) => {
 
   if (command === "player") {
     client.commands.get("player").execute(message, args);
+  }
+
+  if (command === "queue" || command === "q") {
+
+  }
+
+  if (command === "help") {    
+    client.commands.get("help").execute(client, args, message, null);
   }
 };
 

@@ -2,10 +2,10 @@ require("dotenv").config();
 module.exports = {
   PREFIX: process.env.BOT_PREFIX,
 
-  COLOR_SUCCESS: `#47ff94`,
-  COLOR_WARNING: `#ffd445`,
-  COLOR_DANGER: `#fa4d43`,
-  COLOR_INFO: `#4396fa`,
+  COLOR_SUCCESS: 3066993,
+  COLOR_WARNING: 15844367,
+  COLOR_DANGER: 15158332,
+  COLOR_INFO: 3447003,
 
   EMOJI_RESUME: "▶",
   EMOJI_PAUSE: "⏸",

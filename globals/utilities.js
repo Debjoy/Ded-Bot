@@ -13,7 +13,7 @@ const createCommands = (client) => {
   getReference(client).commands.post({
     data: {
       name: "play",
-      description: "play a song!",
+      description: "play a song! 🎶",
       options: [
         {
           name: "song",
@@ -22,6 +22,12 @@ const createCommands = (client) => {
           required: true,
         },
       ],
+    },
+  });
+  getReference(client).commands.post({
+    data: {
+      name: "help",
+      description: "Need help? 🖐"
     },
   });
 };
