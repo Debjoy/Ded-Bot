@@ -61,7 +61,7 @@ module.exports = {
         utility.send_reply("Player 👇", client, message, interaction, true);
       player_message_init = await utility
         .getTextChannel(client, message, interaction)
-        .send(`Searching 🔍 ${constants.EMOJI_LOADING}`);
+        .send(`Preparing ${constants.EMOJI_LOADING}`);
       db.prepare(
         "insert into running_players (player_msg_id, channel_id) values ($msg_id, $chnl_id)"
       ).run({
@@ -75,17 +75,18 @@ module.exports = {
     const song = {};
 
     const input = typeof args[0] == "object" ? args[0].value : args.join(" ");
-    console.log(input);
     if (validURL(input)) {
       //WHEN URL IS USED
-      //TO be tested
+      if (player_message_init)
+        player_message_init.edit(`Searching 🔍 ${constants.EMOJI_LOADING}`);
       const songInfo = await ytdl.getInfo(input);
       song.title = songInfo.videoDetails.title;
       song.url = songInfo.videoDetails.video_url;
-      let thumbnails = songInfo.videoDetails.thumbnails;
       song.thumb = thumbnails[thumbnails.length - 1].url;
       song.isLive = songInfo.videoDetails.isLive;
     } else {
+      if (player_message_init)
+        player_message_init.edit(`Searching 🔍 ${constants.EMOJI_LOADING}`);
       const videoFinder = async (query) => {
         const videoResult = await ytSearch(query);
         return videoResult.videos.length > 1 ? videoResult.videos[0] : null;
@@ -119,13 +120,23 @@ module.exports = {
 
       if (message) message.react(constants.EMOJI_RERUN);
       player_func.play(message, interaction, queueContruct.songs[0]);
-    } else {      
+    } else {
       serverQueue.songs.push(song);
       if (message) {
         message.react("👍");
-        utility.send_reply(`**${song.title}** has been added to the queue!`,client, message, null);
+        utility.send_reply(
+          `**${song.title}** has been added to the queue!`,
+          client,
+          message,
+          null
+        );
       } else {
-        utility.send_reply(`**${song.title}** has been added to the queue!`,client, null, interaction);
+        utility.send_reply(
+          `**${song.title}** has been added to the queue!`,
+          client,
+          null,
+          interaction
+        );
       }
       player_func.updatePlayer(serverQueue);
     }

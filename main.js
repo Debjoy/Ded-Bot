@@ -80,6 +80,9 @@ client.ws.on("INTERACTION_CREATE", async (interaction) => {
 });
 
 client.on("message", (message) => {
+  /* FOR GROOVY MY LOVE */
+  if(utility.checkGroovy(message))
+  return;
   readMessage(message);
 });
 

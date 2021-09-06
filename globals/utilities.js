@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Client } = require("discord.js-12");
+const fs = require("fs");
 
 const getReference = (client) => {
   return process.env.MODE
@@ -27,13 +27,13 @@ const createCommands = (client) => {
   getReference(client).commands.post({
     data: {
       name: "help",
-      description: "Need help? 🖐"
+      description: "Need help? 🖐",
     },
   });
   getReference(client).commands.post({
     data: {
       name: "skip",
-      description: "Skip the current song! ⏭"
+      description: "Skip the current song! ⏭",
     },
   });
 };
@@ -65,7 +65,7 @@ const send_reply = async (
       message.channel.send(content);
     }
   } else if (interaction) {
-    const flag = private? 64: 0;
+    const flag = private ? 64 : 0;
     if (typeof content == "object") {
       client.api.interactions(interaction.id, interaction.token).callback.post({
         data: {
@@ -117,6 +117,32 @@ const getTextChannel = (client, message, interaction) => {
     return client.channels.cache.get(interaction.channel_id);
   }
 };
+
+const checkGroovy = (message) => {  
+  if (
+    message.author.bot &&
+    message.author.id === `234395307759108106` &&
+    message.embeds.length > 0
+  ) {
+    console.log("inside")
+    let description = message.embeds[0].description;
+    if (description.toLowerCase().startsWith("groovy is no longer in service.")) {
+      const groovy_msgs = JSON.parse(
+        fs.readFileSync("./globals/groovy_miss.json", "utf8")
+      );
+      let random_number = Math.floor(Math.random() * groovy_msgs.length);
+      console.log(random_number);
+      let msg = groovy_msgs[random_number];
+      message.channel.send(msg);
+
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+};
 module.exports = {
   createCommands,
   fetchCommands,
@@ -124,4 +150,5 @@ module.exports = {
   getVoiceChannel,
   getUser,
   getTextChannel,
+  checkGroovy,
 };
