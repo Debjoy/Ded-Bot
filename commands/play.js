@@ -82,6 +82,7 @@ module.exports = {
       const songInfo = await ytdl.getInfo(input);
       song.title = songInfo.videoDetails.title;
       song.url = songInfo.videoDetails.video_url;
+      let thumbnails = songInfo.videoDetails.thumbnails;
       song.thumb = thumbnails[thumbnails.length - 1].url;
       song.isLive = songInfo.videoDetails.isLive;
     } else {
