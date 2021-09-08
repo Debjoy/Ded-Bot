@@ -81,8 +81,7 @@ client.ws.on("INTERACTION_CREATE", async (interaction) => {
 
 client.on("message", (message) => {
   /* FOR GROOVY MY LOVE */
-  if(utility.checkGroovy(message))
-  return;
+  if (utility.checkGroovy(message)) return;
   readMessage(message);
 });
 
@@ -133,6 +132,11 @@ const readMessage = (message) => {
 
   if (command === "help") {
     client.commands.get("help").execute(client, args, message, null);
+    return;
+  }
+
+  if (command === "ping") {
+    client.commands.get("ping").execute(client, args, message, null);
     return;
   }
 };

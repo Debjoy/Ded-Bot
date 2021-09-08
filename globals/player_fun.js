@@ -76,7 +76,7 @@ const stop = async (message, interaction) => {
   db.prepare("delete from running_players where player_msg_id = $msg_id").run({
     msg_id: serverQueue.player_message.id,
   });
-  playerQueue.delete(message.guild.id);
+  playerQueue.delete( message ? message.guild.id : interaction.guild_id);
 };
 
 const skip = (message, interaction) => {
