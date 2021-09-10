@@ -110,6 +110,7 @@ module.exports = {
         songs: [],
         volume: 5,
         playing: true,
+        isLooping: false
       };
 
       playerQueue.set(

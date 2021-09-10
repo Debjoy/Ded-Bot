@@ -76,6 +76,10 @@ client.ws.on("INTERACTION_CREATE", async (interaction) => {
     client.commands
       .get("skip")
       .execute(client, interaction.data.options, null, interaction);
+  } else if (command == "loop") {
+    client.commands
+      .get("loop")
+      .execute(client, interaction.data.options, null, interaction);
   }
 });
 
@@ -126,7 +130,8 @@ const readMessage = (message) => {
     return;
   }
 
-  if (command === "queue" || command === "q") {
+  if (command === "loop" || command === "repeat") {
+    client.commands.get("loop").execute(client, args, message, null);
     return;
   }
 
@@ -185,6 +190,9 @@ const messageReaction = async (reaction, user) => {
         break;
       case constants.EMOJI_SKIP:
         player_func.skip(reaction.message, null);
+        break;
+      case constants.EMOJI_REPEAT:
+        player_func.loop(reaction.message, null);
         break;
     }
 };

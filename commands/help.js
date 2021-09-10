@@ -33,6 +33,11 @@ module.exports = {
           value: `Skips currently playing song.`,
         },
         {
+          name: `${prefix}loop or /loop`,
+          value: `Loops currently playing song. use \`stop\` or \`skip\` to stop loop.
+          **Alias**: \`${prefix}repeat\``,
+        },
+        {
           name: `${prefix}player`,
           value: `Re-Renders the player for easy access.`,
         },

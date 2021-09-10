@@ -36,6 +36,12 @@ const createCommands = (client) => {
       description: "Skip the current song! ⏭",
     },
   });
+  getReference(client).commands.post({
+    data: {
+      name: "loop",
+      description: "Toggles repeat mode! 🔁",
+    },
+  });
 };
 
 /* FETCHING COMMANDS*/

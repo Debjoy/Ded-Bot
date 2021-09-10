@@ -17,7 +17,7 @@ const play = async (message, interaction, song) => {
   const dispatcher = serverQueue.connection
     .play(ytdl(song.url, filters))
     .on("finish", () => {
-      serverQueue.songs.shift();
+      if (!serverQueue.isLooping) serverQueue.songs.shift();
       play(message, interaction, serverQueue.songs[0]);
     })
     .on("error", (error) => console.error(error));
@@ -76,7 +76,7 @@ const stop = async (message, interaction) => {
   db.prepare("delete from running_players where player_msg_id = $msg_id").run({
     msg_id: serverQueue.player_message.id,
   });
-  playerQueue.delete( message ? message.guild.id : interaction.guild_id);
+  playerQueue.delete(message ? message.guild.id : interaction.guild_id);
 };
 
 const skip = (message, interaction) => {
@@ -84,7 +84,24 @@ const skip = (message, interaction) => {
     message ? message.guild.id : interaction.guild_id
   );
   if (!serverQueue) return;
+  stopLoop();
   serverQueue.connection.dispatcher.end();
+};
+const loop = (message, interaction) => {
+  const serverQueue = playerQueue.get(
+    message ? message.guild.id : interaction.guild_id
+  );
+  if (!serverQueue) return;
+  serverQueue.isLooping = !serverQueue.isLooping;
+  updatePlayer(serverQueue);
+};
+const stopLoop = (message, interaction) => {
+  const serverQueue = playerQueue.get(
+    message ? message.guild.id : interaction.guild_id
+  );
+  if (!serverQueue) return;
+  serverQueue.isLooping = false;  
+  updatePlayer(serverQueue);
 };
 
 const updatePlayer = (serverQueue) => {
@@ -93,19 +110,24 @@ const updatePlayer = (serverQueue) => {
   msg.react(constants.EMOJI_PAUSE);
   msg.react(constants.EMOJI_SKIP);
   msg.react(constants.EMOJI_STOP);
+  msg.react(constants.EMOJI_REPEAT);
   if (serverQueue.songs.length == 0) return console.log("Queue empty");
 
   let song = serverQueue.songs[0];
   let queueString = "";
   if (serverQueue.songs.length > 1) {
     serverQueue.songs.forEach((song, index) => {
-      if (index > 0) queueString += (index+1)+`: ${song.title}\n`;
+      if (index > 0) queueString += index + 1 + `: ${song.title}\n`;
     });
-  }else{
-    queueString = "Empty! will close "+constants.EMOJI_STOP+" player when skipped "+constants.EMOJI_SKIP;
+  } else {
+    queueString =
+      "Empty! will close " +
+      constants.EMOJI_STOP +
+      " player when skipped " +
+      constants.EMOJI_SKIP;
   }
   const player_embed = {
-    title: `Player: ${serverQueue.playing ? "Playing ▶" : "Player: Paused ⏸"}`,
+    title: `Player: ${serverQueue.playing ? "Playing ▶" : "Player: Paused ⏸"} ${serverQueue.isLooping ? "Looping 🔁" : ""}`,
     color: serverQueue.playing ? constants.COLOR_SUCCESS : constants.COLOR_INFO,
     description: `:thumbsup: Now Playing ***${song.title}***`,
     thumbnail: {
@@ -113,9 +135,9 @@ const updatePlayer = (serverQueue) => {
     },
     fields: [
       {
-        name:"Queue 📃",
-        value:queueString
-      }
+        name: "Queue 📃",
+        value: queueString,
+      },
     ],
     footer: {
       text: `Use ${constants.PREFIX}player to bring the player again`,
@@ -130,4 +152,5 @@ module.exports = {
   stop,
   skip,
   updatePlayer,
+  loop
 };
