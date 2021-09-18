@@ -4,6 +4,7 @@ const constants = require("../globals/constants");
 const utility = require("../globals/utilities");
 const player_func = require("../globals/player_fun");
 const Database = require("better-sqlite3");
+const URL = require("url");
 const db = new Database("dedbot.db", { verbose: console.log });
 
 module.exports = {
@@ -51,6 +52,23 @@ module.exports = {
       }
     };
 
+    const input = typeof args[0] == "object" ? args[0].value : args.join(" ");
+    if (validURL(input)) {
+      const query = URL.parse(input, true);
+      if (
+        query.host != "www.youtube.com" &&
+        query.host != "youtu.be" &&
+        query.host != "youtube.com"
+      ) {
+        return utility.send_reply(
+          "Please add a valid youtube url",
+          client,
+          message,
+          interaction,
+          true
+        );
+      }
+    }
     const serverQueue = playerQueue.get(
       message ? message.guild.id : interaction.guild_id
     );
@@ -58,7 +76,7 @@ module.exports = {
 
     if (!serverQueue) {
       if (interaction)
-        utility.send_reply("Player 👇", client, message, interaction, true);
+        utility.send_reply("Player 👇", client, message, interaction);
       player_message_init = await utility
         .getTextChannel(client, message, interaction)
         .send(`Preparing ${constants.EMOJI_LOADING}`);
@@ -73,18 +91,36 @@ module.exports = {
     const connection = await voiceChannel.join();
     connection.voice.setDeaf(true);
     const song = {};
-
-    const input = typeof args[0] == "object" ? args[0].value : args.join(" ");
+    const songList = [];
     if (validURL(input)) {
       //WHEN URL IS USED
+      const query = URL.parse(input, true);
       if (player_message_init)
         player_message_init.edit(`Searching 🔍 ${constants.EMOJI_LOADING}`);
-      const songInfo = await ytdl.getInfo(input);
-      song.title = songInfo.videoDetails.title;
-      song.url = songInfo.videoDetails.video_url;
-      let thumbnails = songInfo.videoDetails.thumbnails;
-      song.thumb = thumbnails[thumbnails.length - 1].url;
-      song.isLive = songInfo.videoDetails.isLive;
+      if (query.query && query.query.list) {
+        const list = await ytSearch({ listId: query.query.list });
+        if (player_message_init)
+          player_message_init.edit(
+            `Loading ${list.size} tracks 💿, ${constants.EMOJI_LOADING}`
+          );
+        songList.push(
+          ...list.videos.map((song) => ({
+            title: song.title,
+            url: `https://www.youtube.com/watch?v=${song.videoId}`,
+            thumb: song.thumbnail,
+          }))
+        );
+      } else {
+        const songInfo = await ytdl.getInfo(input);
+        let thumbnails = songInfo.videoDetails.thumbnails;
+
+        songList.push({
+          title: songInfo.videoDetails.title,
+          url: songInfo.videoDetails.video_url,
+          thumb: thumbnails[thumbnails.length - 1].url,
+          isLive: songInfo.videoDetails.isLive,
+        });
+      }
     } else {
       if (player_message_init)
         player_message_init.edit(`Searching 🔍 ${constants.EMOJI_LOADING}`);
@@ -94,9 +130,11 @@ module.exports = {
       };
 
       const video = await videoFinder(input);
-      song.title = video.title;
-      song.url = video.url;
-      song.thumb = video.thumbnail;
+      songList.push({
+        title: video.title,
+        url: video.url,
+        thumb: video.thumbnail,
+      });
     }
 
     if (!serverQueue) {
@@ -110,7 +148,7 @@ module.exports = {
         songs: [],
         volume: 5,
         playing: true,
-        isLooping: false
+        isLooping: false,
       };
 
       playerQueue.set(
@@ -118,28 +156,31 @@ module.exports = {
         queueContruct
       );
 
-      queueContruct.songs.push(song); //ADDING to QUEUE
+      queueContruct.songs.push(...songList); //ADDING to QUEUE
 
       if (message) message.react(constants.EMOJI_RERUN);
       player_func.play(message, interaction, queueContruct.songs[0]);
     } else {
-      serverQueue.songs.push(song);
-      if (message) {
-        message.react("👍");
+      serverQueue.songs.push(...songList);
+
+      message ? message.react("👍") : null;
+
+      if (songList.length > 1) {
         utility.send_reply(
-          `**${song.title}** has been added to the queue!`,
+          `**${songList.length} tracks 💿** has been added to the queue!`,
           client,
           message,
-          null
+          interaction
         );
       } else {
         utility.send_reply(
-          `**${song.title}** has been added to the queue!`,
+          `**${songList[0].title}** has been added to the queue!`,
           client,
-          null,
+          message,
           interaction
         );
       }
+
       player_func.updatePlayer(serverQueue);
     }
   },

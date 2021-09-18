@@ -83,8 +83,8 @@ const skip = (message, interaction) => {
   const serverQueue = playerQueue.get(
     message ? message.guild.id : interaction.guild_id
   );
-  if (!serverQueue) return;
-  stopLoop();
+  if (!serverQueue || !serverQueue.connection.dispatcher) return;
+  stopLoop(message, interaction);
   serverQueue.connection.dispatcher.end();
 };
 const loop = (message, interaction) => {
@@ -100,7 +100,7 @@ const stopLoop = (message, interaction) => {
     message ? message.guild.id : interaction.guild_id
   );
   if (!serverQueue) return;
-  serverQueue.isLooping = false;  
+  serverQueue.isLooping = false;
   updatePlayer(serverQueue);
 };
 
@@ -116,8 +116,17 @@ const updatePlayer = (serverQueue) => {
   let song = serverQueue.songs[0];
   let queueString = "";
   if (serverQueue.songs.length > 1) {
-    serverQueue.songs.forEach((song, index) => {
-      if (index > 0) queueString += index + 1 + `: ${song.title}\n`;
+    serverQueue.songs.every((song, index) => {
+      if (index > 0) {
+        queueString += `**▫** ${song.title}\n`;
+        if (index > 2) {
+          queueString += `**▫** . . . . . . . . . . . . . . . . . \n**▫ ${
+            serverQueue.songs.length - 1
+          } songs queued.**`;
+          return false;
+        }
+      }
+      return true;
     });
   } else {
     queueString =
@@ -127,15 +136,17 @@ const updatePlayer = (serverQueue) => {
       constants.EMOJI_SKIP;
   }
   const player_embed = {
-    title: `Player: ${serverQueue.playing ? "Playing ▶" : "Player: Paused ⏸"} ${serverQueue.isLooping ? "Looping 🔁" : ""}`,
+    title: `Player: ${serverQueue.playing ? "Playing ▶" : "Player: Paused ⏸"} ${
+      serverQueue.isLooping ? "Looping 🔁" : ""
+    }`,
     color: serverQueue.playing ? constants.COLOR_SUCCESS : constants.COLOR_INFO,
-    description: `:thumbsup: Now Playing ***${song.title}***`,
+    description: `🎶 Now Playing ***${song.title}***`,
     thumbnail: {
       url: song.thumb,
     },
     fields: [
       {
-        name: "Queue 📃",
+        name: "Queue 💿",
         value: queueString,
       },
     ],
@@ -152,5 +163,5 @@ module.exports = {
   stop,
   skip,
   updatePlayer,
-  loop
+  loop,
 };
