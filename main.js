@@ -1,9 +1,9 @@
-require("dotenv").config();
-const { Client, Intents, Collection, WebhookClient } = require("discord.js-12");
-const Database = require("better-sqlite3");
-const db = new Database("dedbot.db", { verbose: console.log });
+require('dotenv').config();
+const { Client, Intents, Collection, WebhookClient } = require('discord.js-12');
+const Database = require('better-sqlite3');
+const db = new Database('dedbot.db', { verbose: console.log });
 
-require("./globals/init");
+require('./globals/init');
 
 const client = new Client({
   intents: [
@@ -11,33 +11,33 @@ const client = new Client({
     Intents.FLAGS.GUILD_MESSAGES,
     Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
   ],
-  partials: ["MESSAGE", "CHANNEL", "REACTION"],
+  partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
   fetchAllMembers: true,
 });
 
-const fs = require("fs");
-require("./globals/player_data");
-const constants = require("./globals/constants");
-const player_func = require("./globals/player_fun");
-const utility = require("./globals/utilities");
+const fs = require('fs');
+require('./globals/player_data');
+const constants = require('./globals/constants');
+const player_func = require('./globals/player_fun');
+const utility = require('./globals/utilities');
 const prefix = constants.PREFIX;
 
 client.commands = new Collection();
 
 const commandFiles = fs
-  .readdirSync("./commands/")
-  .filter((file) => file.endsWith(".js"));
+  .readdirSync('./commands/')
+  .filter((file) => file.endsWith('.js'));
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
 
   client.commands.set(command.name, command);
 }
 
-client.once("ready", () => {
-  console.log("Ded-Bot is online!");
+client.once('ready', () => {
+  console.log('Ded-Bot is online!');
 
   utility.createCommands(client);
-  let players = db.prepare("Select * from running_players").all();
+  let players = db.prepare('Select * from running_players').all();
   console.log(players);
 
   players.forEach(async (player) => {
@@ -48,9 +48,9 @@ client.once("ready", () => {
         .then((msg) => {
           msg.delete();
         })
-        .catch((e) => console.log("message not found error"))
+        .catch((e) => console.log('message not found error'))
         .finally(() => {
-          db.prepare("delete from running_players where r_player_id = $id").run(
+          db.prepare('delete from running_players where r_player_id = $id').run(
             {
               id: player.r_player_id,
             }
@@ -60,30 +60,34 @@ client.once("ready", () => {
   });
 });
 
-client.ws.on("INTERACTION_CREATE", async (interaction) => {
+client.ws.on('INTERACTION_CREATE', async (interaction) => {
   // do stuff and respond here
   const command = interaction.data.name.toLowerCase();
 
-  if (command === "play") {
+  if (command === 'play') {
     client.commands
-      .get("play")
+      .get('play')
       .execute(client, interaction.data.options, null, interaction);
-  } else if (command == "help") {
+  } else if (command == 'help') {
     client.commands
-      .get("help")
+      .get('help')
       .execute(client, interaction.data.options, null, interaction);
-  } else if (command == "skip") {
+  } else if (command == 'skip') {
     client.commands
-      .get("skip")
+      .get('skip')
       .execute(client, interaction.data.options, null, interaction);
-  } else if (command == "loop") {
+  } else if (command == 'loop') {
     client.commands
-      .get("loop")
+      .get('loop')
+      .execute(client, interaction.data.options, null, interaction);
+  } else if (command == 'activity') {
+    client.commands
+      .get('activity')
       .execute(client, interaction.data.options, null, interaction);
   }
 });
 
-client.on("message", (message) => {
+client.on('message', (message) => {
   /* FOR GROOVY MY LOVE */
   if (utility.checkGroovy(message)) return;
   readMessage(message);
@@ -95,61 +99,61 @@ const readMessage = (message) => {
   const args = message.content.slice(prefix.length).split(/ +/);
   const command = args.shift().toLowerCase();
 
-  if (command === "test") {
-    client.commands.get("test").execute(message, args);
+  if (command === 'test') {
+    client.commands.get('test').execute(message, args);
     return;
   }
 
-  if (command === "play" || command === "p") {
-    client.commands.get("play").execute(client, args, message, null);
+  if (command === 'play' || command === 'p') {
+    client.commands.get('play').execute(client, args, message, null);
     return;
   }
 
-  if (command === "leave" || command === "dc" || command === "stop") {
-    client.commands.get("leave").execute(message, args);
+  if (command === 'leave' || command === 'dc' || command === 'stop') {
+    client.commands.get('leave').execute(message, args);
     return;
   }
 
-  if (command === "pause") {
-    client.commands.get("pause").execute(message, args);
+  if (command === 'pause') {
+    client.commands.get('pause').execute(message, args);
     return;
   }
 
-  if (command === "resume") {
-    client.commands.get("resume").execute(message, args);
+  if (command === 'resume') {
+    client.commands.get('resume').execute(message, args);
     return;
   }
 
-  if (command === "player") {
-    client.commands.get("player").execute(message, args);
+  if (command === 'player') {
+    client.commands.get('player').execute(message, args);
     return;
   }
 
-  if (command === "skip") {
-    client.commands.get("skip").execute(client, args, message, null);
+  if (command === 'skip') {
+    client.commands.get('skip').execute(client, args, message, null);
     return;
   }
 
-  if (command === "loop" || command === "repeat") {
-    client.commands.get("loop").execute(client, args, message, null);
+  if (command === 'loop' || command === 'repeat') {
+    client.commands.get('loop').execute(client, args, message, null);
     return;
   }
 
-  if (command === "help") {
-    client.commands.get("help").execute(client, args, message, null);
+  if (command === 'help') {
+    client.commands.get('help').execute(client, args, message, null);
     return;
   }
 
-  if (command === "ping") {
-    client.commands.get("ping").execute(client, args, message, null);
+  if (command === 'ping') {
+    client.commands.get('ping').execute(client, args, message, null);
     return;
   }
 };
 
-client.on("messageReactionAdd", (reaction, user) => {
+client.on('messageReactionAdd', (reaction, user) => {
   messageReaction(reaction, user);
 });
-client.on("messageReactionRemove", (reaction, user) => {
+client.on('messageReactionRemove', (reaction, user) => {
   messageReaction(reaction, user);
 });
 
@@ -164,7 +168,7 @@ const messageReaction = async (reaction, user) => {
         .then((msg) => {
           readMessage(msg);
         })
-        .catch((e) => console.log("message not found error"));
+        .catch((e) => console.log('message not found error'));
     }
     return;
   }
